@@ -37,6 +37,17 @@ import {
   type Status,
 } from "./data";
 import "./style.css";
+import "./platform.css";
+import {
+  PlatformShell,
+  VideoFeed,
+  WatchPage,
+  ChannelPage,
+  TemplateChoices,
+  RequestTemplates,
+  useVideoLibrary,
+} from "./platform";
+import { requestTemplates } from "./videos";
 
 const statusText: Record<Status, string> = {
   OPEN: "Open",
@@ -76,6 +87,9 @@ function Badge({
   return <span className={`badge ${className}`}>{children}</span>;
 }
 function App() {
+  const library = useVideoLibrary();
+  const [videoSearch, setVideoSearch] = useState("");
+  const [templateId, setTemplateId] = useState("overview");
   const [state, setState] = useState<DemoState>(readState);
   const [route, setRoute] = useState(routeNow);
   const [toast, setToast] = useState("");
@@ -126,13 +140,20 @@ function App() {
       setGate(() => action);
     }
   };
-  const startCreate = () =>
+  const chooseTemplate = (id: string) =>
     adultAction(() => {
-      setStep(1);
+      const template = requestTemplates.find((t) => t.id === id);
+      if (!template) return;
+      setTemplateId(id);
+      setProductId(template.productId);
+      setRequestCategory(template.category);
+      setReward(String(template.reward));
       setNotes("");
       setAgreed(false);
+      setStep(1);
       go("/create");
     });
+  const startCreate = () => chooseTemplate("overview");
   const updateRequest = (id: string, changes: Partial<RequestItem>) =>
     setState((s) => ({
       ...s,
@@ -158,7 +179,7 @@ function App() {
     (r) =>
       (filter === "All requests" || r.status === filter) &&
       (category === "All categories" || r.category === category) &&
-      `${catalogue.find((p) => p.id === r.productId)?.name} ${r.category} ${creators.find((c) => c.id === r.creatorId)?.name}`
+      `${requestTemplates.find((t) => t.id === r.templateId)?.title || ""} ${catalogue.find((p) => p.id === r.productId)?.name} ${r.category} ${creators.find((c) => c.id === r.creatorId)?.name}`
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
@@ -175,6 +196,12 @@ function App() {
   const createRequest = (e: FormEvent) => {
     e.preventDefault();
     if (
+      !requestTemplates.some(
+        (t) =>
+          t.id === templateId &&
+          t.productId === productId &&
+          t.category === requestCategory,
+      ) ||
       !catalogue.some((p) => p.id === productId) ||
       requestCategory !== activeProduct.category ||
       notesError ||
@@ -196,13 +223,14 @@ function App() {
         {
           id,
           productId,
+          templateId,
           category: requestCategory,
           reward: amount,
           status: "OPEN",
           creatorId: "you",
           notes:
-            notes.trim() ||
-            "Approved catalogue request. Respect the agreed brief, boundaries, and the right to stop.",
+            requestTemplates.find((t) => t.id === templateId)!.brief +
+            (notes.trim() ? " Additional note: " + notes.trim() : ""),
           createdAt: new Date().toISOString(),
         },
         ...s.requests,
@@ -296,7 +324,8 @@ function App() {
             className="card-title"
             onClick={() => go("/requests/" + r.id)}
           >
-            {p.line} request
+            {requestTemplates.find((t) => t.id === r.templateId)?.title ||
+              p.line + " request"}
           </button>
           <div className="card-product">
             <ShieldCheck size={13} />
@@ -365,161 +394,29 @@ function App() {
     </div>
   );
   let content: ReactNode;
-  if (route === "/")
+  if (["/", "/search", "/following", "/saved", "/history"].includes(route))
     content = (
-      <>
-        <section className="hero">
-          <div className="hero-top">
-            <Badge className="adult-badge">18+ ONLY</Badge>
-            <span>THE NAME IS A JOKE. THE BOUNDARIES AREN’T.</span>
-            <span className="hero-coordinate">CATALOGUE ONLY ↗</span>
-          </div>
-          <h1 className="domain">
-            <span>illstickanything</span>
-            <span>
-              upmy
-              <span className="domain-accent">
-                ass.com<span className="asterisk">✳</span>
-              </span>
-            </span>
-          </h1>
-          <div className="hero-bottom">
-            <div>
-              <h2>
-                Within reason<span>.</span>
-              </h2>
-              <p className="hero-boundary">
-                Not literally anything. Adults only. Safe, consensual requests
-                using approved products only.
-              </p>
-              <p className="hero-copy">
-                Post a request. Set a reward. A verified adult can accept it,
-                complete it, and get paid.
-              </p>
-              <div className="hero-cta">
-                <button
-                  className="button primary"
-                  onClick={() => go("/browse")}
-                >
-                  Browse requests <ArrowUpRight size={17} />
-                </button>
-                <button className="button secondary" onClick={startCreate}>
-                  Post a request <Plus size={17} />
-                </button>
-              </div>
-            </div>
-            <div className="hero-ticket">
-              <div className="ticket-top">
-                <span className="ticket-icon">
-                  <ShieldCheck size={19} />
-                </span>
-                <span>
-                  GOOD TASTE.
-                  <br />
-                  BETTER BOUNDARIES.
-                </span>
-                <ArrowUpRight size={18} />
-              </div>
-              <div className="ticket-rule" />
-              <div className="ticket-row">
-                <span>Adults</span>
-                <b>Verified*</b>
-              </div>
-              <div className="ticket-row">
-                <span>Products</span>
-                <b>Catalogue only</b>
-              </div>
-              <div className="ticket-row">
-                <span>Proof</span>
-                <b>Private by design</b>
-              </div>
-              <small>*Simulated verification in this demo.</small>
-            </div>
-          </div>
-        </section>
-        <div className="ticker">
-          <span>✳ CONSENT IS THE WHOLE POINT</span>
-          <span>✳ APPROVED CATALOGUE ONLY</span>
-          <span>✳ PRIVATE PROOF. PUBLIC BOUNDARIES.</span>
-          <span>✳ NO PRESSURE. NO EXCEPTIONS.</span>
-        </div>
-        <section className="feed-section">
-          <div className="section-heading">
-            <div>
-              <div className="eyebrow">
-                <span />
-                THE REQUEST BOARD
-              </div>
-              <h2>
-                Good requests. <span>Real boundaries.</span>
-              </h2>
-              <p>
-                Fictional people, fictional payouts. A very real product demo.
-              </p>
-            </div>
-            <button className="text-button" onClick={() => go("/browse")}>
-              View all requests <ArrowUpRight size={17} />
-            </button>
-          </div>
-          <div className="request-grid">
-            {state.requests.slice(0, 6).map((r) => (
-              <RequestCard key={r.id} r={r} />
-            ))}
-          </div>
-        </section>
-        <section className="how-section">
-          <div>
-            <div className="eyebrow">
-              <span />
-              VERY SIMPLE. VERY CONSIDERED.
-            </div>
-            <h2>
-              Big joke.
-              <br />
-              Proper process<span>.</span>
-            </h2>
-            <p>The reward should be clear. The boundaries should be clearer.</p>
-          </div>
-          <div className="how-steps">
-            {[
-              {
-                n: "01",
-                title: "Pick from the catalogue",
-                copy: "Choose an approved product category. Set a reward. Add a respectful note.",
-              },
-              {
-                n: "02",
-                title: "An adult chooses to accept",
-                copy: "Read the brief, agree to the boundaries, or decline. Consent can be withdrawn.",
-              },
-              {
-                n: "03",
-                title: "Private proof. Reviewed payout.",
-                copy: "Proof goes to a private review. An approved request moves to payout.",
-              },
-            ].map((x) => (
-              <div key={x.n}>
-                <span>{x.n}</span>
-                <div>
-                  <h3>{x.title}</h3>
-                  <p>{x.copy}</p>
-                </div>
-                <ArrowUpRight size={18} />
-              </div>
-            ))}
-          </div>
-        </section>
-        <Safety />
-      </>
+      <VideoFeed route={route} query={videoSearch} go={go} library={library} />
+    );
+  else if (route.startsWith("/watch/"))
+    content = (
+      <WatchPage
+        id={route.split("/")[2]}
+        go={go}
+        library={library}
+        onRequest={chooseTemplate}
+        notify={setToast}
+      />
     );
   else if (route === "/browse")
     content = (
       <>
         <PageHead
           kicker="THE REQUEST BOARD"
-          title="Find your within reason"
-          copy="Catalogue-only requests. Clear rewards. Every card is fictional in this demo."
+          title="The request board"
+          copy="Predefined video briefs, clear demo rewards, and the right to decline."
         />
+        <RequestTemplates onChoose={chooseTemplate} />
         <div className="browse-tools">
           <label className="search-input">
             <Search size={18} />
@@ -594,13 +491,13 @@ function App() {
       <>
         <PageHead
           kicker="MAKE A REQUEST"
-          title="Choose. Set. Respect"
-          copy="A catalogue choice, a clear reward, and boundaries that aren’t up for negotiation."
+          title="Request a video"
+          copy="Choose a fixed brief, set a demo reward, and let a creator decide."
         />
         <div className="builder-layout">
           <form className="panel builder" onSubmit={createRequest}>
             <div className="stepper">
-              {["Product", "Brief", "Reward", "Review"].map((s, i) => (
+              {["Request", "Brief", "Reward", "Review"].map((s, i) => (
                 <div className={step >= i + 1 ? "current" : ""} key={s}>
                   <span>{step > i + 1 ? <Check size={13} /> : i + 1}</span>
                   {s}
@@ -609,35 +506,21 @@ function App() {
             </div>
             {step === 1 ? (
               <>
-                <h2>Choose an approved product.</h2>
+                <h2>Choose a predefined video request.</h2>
                 <p className="muted">
-                  This demo uses a fictional curated catalogue. You can’t add
-                  custom objects.
+                  Choose one of the non-explicit video briefs below. Catalogue
+                  items are fictional and custom objects are not permitted.
                 </p>
-                <div className="product-options">
-                  {catalogue.map((p) => (
-                    <button
-                      type="button"
-                      key={p.id}
-                      className={`product-option ${productId === p.id ? "chosen" : ""}`}
-                      onClick={() => {
-                        setProductId(p.id);
-                        setRequestCategory(p.category);
-                      }}
-                    >
-                      <ProductArt tone={p.tone} compact />
-                      <span>
-                        <strong>{p.name}</strong>
-                        <small>
-                          {p.line} · {p.category}
-                        </small>
-                      </span>
-                      <span className="option-check">
-                        {productId === p.id && <Check size={13} />}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                <TemplateChoices
+                  selected={templateId}
+                  onChoose={(id) => {
+                    const t = requestTemplates.find((x) => x.id === id)!;
+                    setTemplateId(id);
+                    setProductId(t.productId);
+                    setRequestCategory(t.category);
+                    setReward(String(t.reward));
+                  }}
+                />
                 <div className="inline-note">
                   <ShieldCheck size={16} /> Catalogue labels are illustrative.
                   They are not real product safety certification.
@@ -646,6 +529,9 @@ function App() {
             ) : step === 2 ? (
               <>
                 <h2>A clear brief. A clear boundary.</h2>
+                <div className="inline-note">
+                  {requestTemplates.find((t) => t.id === templateId)?.brief}
+                </div>
                 <label className="field">
                   Permitted category
                   <select
@@ -735,6 +621,18 @@ function App() {
                 <h2>One last boundary check.</h2>
                 <div className="review-summary">
                   <div>
+                    <span>Video request</span>
+                    <b>
+                      {requestTemplates.find((t) => t.id === templateId)?.title}
+                    </b>
+                  </div>
+                  <div>
+                    <span>Fixed brief</span>
+                    <p>
+                      {requestTemplates.find((t) => t.id === templateId)?.brief}
+                    </p>
+                  </div>
+                  <div>
                     <span>Product</span>
                     <b>{activeProduct.name}</b>
                   </div>
@@ -817,7 +715,7 @@ function App() {
           <aside className="builder-aside">
             <span className="eyebrow">YOUR REQUEST PREVIEW</span>
             <ProductArt tone={activeProduct.tone} />
-            <h3>{activeProduct.line} request</h3>
+            <h3>{requestTemplates.find((t) => t.id === templateId)?.title}</h3>
             <p>
               {activeProduct.name} · {requestCategory}
             </p>
@@ -840,83 +738,16 @@ function App() {
         <Safety />
       </>
     );
-  else if (route.startsWith("/profile/")) {
-    const c = creators.find((x) => x.id === route.split("/")[2]) || creators[3];
-    const owned = state.requests.filter((r) => r.creatorId === c.id);
+  else if (route.startsWith("/profile/"))
     content = (
-      <>
-        <button className="back-link" onClick={() => go("/browse")}>
-          <ChevronLeft size={15} />
-          Back to requests
-        </button>
-        <div className="profile-hero panel">
-          <div className={`avatar profile-avatar ${c.tone}`}>{c.initials}</div>
-          <div className="profile-intro">
-            <Badge className="verified">
-              <BadgeCheck size={13} /> VERIFIED ADULT · DEMO
-            </Badge>
-            <h1>
-              {c.name}
-              <span>✳</span>
-            </h1>
-            <p>{c.handle}</p>
-            <div>{c.bio}</div>
-          </div>
-          <div className="profile-stats">
-            <div>
-              <Star size={17} />
-              <strong>{c.rating}</strong>
-              <small>CREATOR RATING</small>
-            </div>
-            <div>
-              <CheckCheck size={17} />
-              <strong>{c.completed}</strong>
-              <small>REQUESTS COMPLETE</small>
-            </div>
-          </div>
-        </div>
-        <div className="profile-details">
-          <div className="panel">
-            <ShieldCheck size={20} />
-            <h3>Boundaries first</h3>
-            <p>
-              Catalogue-only requests. Private evidence. Consent respected
-              before, during, and after acceptance.
-            </p>
-          </div>
-          <div className="panel">
-            <Star size={20} />
-            <h3>{c.reviews} fictional reviews</h3>
-            <p>
-              “Clear brief. Respectful communication. Exactly how a request
-              should work.”
-            </p>
-            <small>DEMO REVIEW · NOT A REAL ENDORSEMENT</small>
-          </div>
-        </div>
-        <div className="section-heading compact-heading">
-          <h2>{c.id === "you" ? "Your requests" : "Requests by " + c.name}</h2>
-          <span className="micro">FICTIONAL PROFILE</span>
-        </div>
-        {owned.length ? (
-          <div className="request-grid">
-            {owned.map((r) => (
-              <RequestCard r={r} key={r.id} />
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <Plus size={28} />
-            <h3>Your first request starts here.</h3>
-            <button className="button primary" onClick={startCreate}>
-              Post a request <ArrowUpRight size={16} />
-            </button>
-          </div>
-        )}
-        <Safety />
-      </>
+      <ChannelPage
+        id={route.split("/")[2]}
+        go={go}
+        library={library}
+        onRequest={startCreate}
+      />
     );
-  } else if (route === "/wallet")
+  else if (route === "/wallet")
     content = (
       <>
         <PageHead
@@ -1136,7 +967,10 @@ function App() {
             </div>
             <div className="panel detail-brief">
               <div className="eyebrow">THE BRIEF</div>
-              <h2>{p.line} request</h2>
+              <h2>
+                {requestTemplates.find((t) => t.id === r.templateId)?.title ||
+                  p.line + " request"}
+              </h2>
               <p>{r.notes}</p>
               <div className="detail-specs">
                 <div>
@@ -1513,97 +1347,17 @@ function App() {
     );
   return (
     <div className="app">
-      <div className="demo-strip">
-        <span className="demo-dot" /> INTERACTIVE DEMO{" "}
-        <span className="strip-divider">/</span> FICTIONAL REQUESTS & PAYOUTS{" "}
-        <button onClick={() => go("/rules")}>
-          See the boundaries <ArrowUpRight size={11} />
-        </button>
-      </div>
-      <header className="header">
-        <button className="brand" onClick={() => go("/")} aria-label="Home">
-          <span className="brand-icon">✳</span>
-          <span>
-            anything<span className="brand-dot">.</span>
-            <small>WITHIN REASON</small>
-          </span>
-        </button>
-        <nav className={mobile ? "nav mobile-open" : "nav"}>
-          <button
-            className={route === "/browse" ? "active" : ""}
-            onClick={() => go("/browse")}
-          >
-            Browse requests
-          </button>
-          <button
-            className={route === "/activity" ? "active" : ""}
-            onClick={() => go("/activity")}
-          >
-            My activity
-          </button>
-          <button
-            className={route === "/rules" ? "active" : ""}
-            onClick={() => go("/rules")}
-          >
-            The boundaries <ArrowUpRight size={11} />
-          </button>
-        </nav>
-        <div className="header-actions">
-          <button className="header-wallet" onClick={() => go("/wallet")}>
-            <Wallet size={16} />
-            <span>
-              {money(state.balance)}
-              <small>DEMO</small>
-            </span>
-          </button>
-          <button
-            className="header-profile"
-            onClick={() => go("/profile/you")}
-            aria-label="Your demo profile"
-          >
-            YO
-            <BadgeCheck size={12} />
-          </button>
-          <button
-            className="menu-button"
-            onClick={() => setMobile(!mobile)}
-            aria-label="Toggle navigation"
-          >
-            <Menu size={21} />
-          </button>
-        </div>
-      </header>
-      <main className={route === "/" ? "shell" : "shell inner-page"}>
+      <PlatformShell
+        route={route}
+        go={go}
+        balance={state.balance}
+        onRequest={startCreate}
+        query={videoSearch}
+        setQuery={setVideoSearch}
+        library={library}
+      >
         {content}
-      </main>
-      <footer className="footer shell">
-        <div className="footer-top">
-          <div>
-            <span className="footer-brand">
-              illstickanythingupmyass.com<span>✳</span>
-            </span>
-            <p>Within reason. Always.</p>
-          </div>
-          <button className="text-button" onClick={startCreate}>
-            Make a demo request <ArrowUpRight size={17} />
-          </button>
-        </div>
-        <div className="footer-bottom">
-          <span>© 2026 · 18+ PRODUCT DEMO · NO EXPLICIT PUBLIC MEDIA</span>
-          <div>
-            <button onClick={() => go("/rules")}>
-              Boundaries & demo privacy
-            </button>
-            <a
-              href="https://github.com/0riceisnice0-hash/Project-Paul"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub <ArrowUpRight size={11} />
-            </a>
-          </div>
-        </div>
-      </footer>
+      </PlatformShell>
       {toast && (
         <div className="toast" role="status">
           <CircleCheck size={17} />

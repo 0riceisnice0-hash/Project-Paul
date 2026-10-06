@@ -1,28 +1,30 @@
-# illstickanythingupmyass.com — Within reason.
+# anything. — illstickanythingupmyass.com
 
-A non-explicit interactive product demo for an adults-only, catalogue-only request marketplace.
+A non-explicit video-platform demo with predefined creator requests. Within reason.
 
 Live preview: https://project-paul-5dh.pages.dev
 
 ## Demo features
 
-- Homepage with the full domain branding, fictional request feed, and visible boundaries.
-- Browse and filter by catalogue category and request status.
-- Four-step request builder: fixed product, permitted category, notes, reward, review.
-- Fictional creator profiles and ratings.
+- Video-first home feed, sidebar navigation, search and category filters.
+- Watch pages with working sample playback, recommendations, likes, saves and local comments.
+- Creator channels, following feed, saved videos and viewing history.
+- Predefined catalogue overview, creator Q&A and behind-the-scenes video requests.
+- Four-step request builder with a fixed brief, optional notes, reward and review.
 - Request details with acceptance, decline, and withdrawal.
 - Private proof placeholder with real uploads disabled.
 - Simulated moderation, verification, and payout stages.
 - Fictional GBP wallet, demo top-ups, and transaction history.
 - Browser-local persistence and reset from the boundaries page.
 
-Every product, profile, verification badge, rating, balance, request, submission, and payout is simulated. Demo catalogue labels are not real safety certifications. No crypto transfers, explicit media, or file uploads are processed.
+Creators, listings, view counts, displayed durations, verification badges, ratings and money are fictional. All watch pages play the same short CC0 flower sample; it is not the video described by the fictional title. Stock thumbnails and media licences are documented in [ASSETS.md](ASSETS.md). No crypto transfers, actual user uploads or shared accounts are processed. Demo catalogue labels are not real safety certifications.
 
 ## Run
 
 ```sh
 npm ci
 npm run dev
+npm run test
 npm run build
 ```
 
@@ -37,10 +39,10 @@ The existing Pages project is a direct-upload project. The included GitHub Actio
 
 ## Demo data and boundaries
 
-The catalogue and seed data are in `src/data.ts`. The builder accepts only known catalogue IDs and their fixed category, rejects listed prohibited words in optional notes, and reserves fictional credits. This client-side check is a demonstration, not a production content moderation service.
+`src/videos.ts` contains fictional videos and fixed request templates. `src/data.ts` contains the illustrative catalogue, creators and marketplace state. The builder validates the template, matching catalogue/category, permitted notes and available fictional credits. Client-side keyword filtering is only a demo and cannot enforce a production policy.
 
-Demo changes stay in local storage under `paul-demo-v2`. No personal files are sent to a server. Cloudflare serves the static app, and Google Fonts supplies typography. Reset restores the fictional data and balance.
+Marketplace changes persist under `paul-demo-v2`; video interactions persist under `paul-video-library-v1`. Comments are local to the current browser, never published. Cloudflare serves static assets; Google Fonts supplies typography. The boundaries page resets marketplace progress. There is no server authentication, age verification, payment escrow or protected upload service.
 
 ## Before production
 
-Production needs server-enforced account and age verification, a real vetted catalogue, consent and dispute policies, access-controlled evidence storage, moderation roles and audit records, and a reviewed payment provider or escrow integration. The current demo is intentionally disconnected from those services.
+See [LAUNCH.md](LAUNCH.md) for a sourced UK business/international launch checklist. A third-party crypto provider does not replace content, privacy, consumer or country-specific review. The current demo is not a production launch or a legal certification.

@@ -3,6 +3,7 @@ export type Status =
 export type Category = "Starter" | "Standard" | "Premium";
 export type RequestItem = {
   id: string;
+  templateId?: string;
   productId: string;
   category: Category;
   reward: number;
@@ -113,6 +114,7 @@ export const seed: DemoState = {
     {
       id: "rq-1035",
       productId: "soft-one",
+      templateId: "overview",
       category: "Starter",
       reward: 35,
       status: "OPEN",
@@ -124,6 +126,7 @@ export const seed: DemoState = {
     {
       id: "rq-1060",
       productId: "studio-two",
+      templateId: "qa",
       category: "Standard",
       reward: 60,
       status: "OPEN",
@@ -135,6 +138,7 @@ export const seed: DemoState = {
     {
       id: "rq-1100",
       productId: "full-circle",
+      templateId: "studio",
       category: "Premium",
       reward: 100,
       status: "OPEN",
@@ -146,6 +150,7 @@ export const seed: DemoState = {
     {
       id: "rq-1075",
       productId: "studio-two",
+      templateId: "qa",
       category: "Standard",
       reward: 75,
       status: "SUBMITTED",
@@ -159,6 +164,7 @@ export const seed: DemoState = {
     {
       id: "rq-1045",
       productId: "soft-one",
+      templateId: "overview",
       category: "Starter",
       reward: 45,
       status: "ACCEPTED",
@@ -171,6 +177,7 @@ export const seed: DemoState = {
     {
       id: "rq-1120",
       productId: "full-circle",
+      templateId: "studio",
       category: "Premium",
       reward: 120,
       status: "PAID",
@@ -222,8 +229,19 @@ export function readState(): DemoState {
       Array.isArray(saved.requests) &&
       Array.isArray(saved.transactions) &&
       typeof saved.balance === "number"
-    )
+    ) {
+      // Preserve earlier demo balances and progress when updating the video UI.
+      const templates: Record<string, string> = {
+        "soft-one": "overview",
+        "studio-two": "qa",
+        "full-circle": "studio",
+      };
+      saved.requests = saved.requests.map((request: RequestItem) => ({
+        ...request,
+        templateId: request.templateId || templates[request.productId],
+      }));
       return saved;
+    }
   } catch {
     /* A fresh demo is safe when storage is unavailable. */
   }
