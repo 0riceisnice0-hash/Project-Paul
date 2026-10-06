@@ -33,32 +33,32 @@ export const catalogue = [
   {
     id: "soft-one",
     name: "Soft One",
-    line: "Silicone essentials",
+    line: "Adult silicone toy",
     category: "Starter" as Category,
     tone: "lime",
     code: "CAT–001",
     description:
-      "A fictional product in our starter catalogue. Demo approval only.",
+      "An illustrative adult anal-toy catalogue item. Demo approval only; no real product safety certification.",
   },
   {
     id: "studio-two",
     name: "Studio Two",
-    line: "Premium silicone",
+    line: "Adult silicone toy",
     category: "Standard" as Category,
     tone: "purple",
     code: "CAT–002",
     description:
-      "A fictional product in our standard catalogue. Demo approval only.",
+      "An illustrative adult anal-toy catalogue item. Demo approval only; no real product safety certification.",
   },
   {
     id: "full-circle",
     name: "Full Circle",
-    line: "Wellness collection",
+    line: "Adult toy collection",
     category: "Premium" as Category,
     tone: "pink",
     code: "CAT–003",
     description:
-      "A fictional product in our premium catalogue. Demo approval only.",
+      "An illustrative adult anal-toy catalogue item. Demo approval only; no real product safety certification.",
   },
 ];
 export const creators = [
@@ -239,6 +239,20 @@ export function readState(): DemoState {
       saved.requests = saved.requests.map((request: RequestItem) => ({
         ...request,
         templateId: request.templateId || templates[request.productId],
+        // Replace the earlier generic video briefs without dropping user notes.
+        notes:
+          /^(A non-explicit overview|A non-explicit creator Q&A|An ordinary behind-the-scenes video)/.test(
+            request.notes,
+          )
+            ? `An adult catalogue request for ${catalogue.find((p) => p.id === request.productId)?.name}. The accepting adult chooses their boundaries and records themselves for private review only. Demo item and submission only.` +
+              (request.notes.includes(" Additional note: ")
+                ? " Additional note: " +
+                  request.notes
+                    .split(" Additional note: ")
+                    .slice(1)
+                    .join(" Additional note: ")
+                : "")
+            : request.notes,
       }));
       return saved;
     }

@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
+  Camera,
   Check,
   CheckCheck,
   ChevronLeft,
@@ -108,6 +109,8 @@ function App() {
   const [proof, setProof] = useState("");
   const [attached, setAttached] = useState(false);
   const [submissionConsent, setSubmissionConsent] = useState(false);
+  const [acceptanceConsent, setAcceptanceConsent] = useState(false);
+  useEffect(() => setAcceptanceConsent(false), [route]);
   useEffect(() => {
     const cb = () => {
       setRoute(routeNow());
@@ -161,6 +164,7 @@ function App() {
     }));
   const accept = (r: RequestItem) =>
     adultAction(() => {
+      if (!acceptanceConsent) return;
       updateRequest(r.id, { status: "ACCEPTED", claimant: "you" });
       setToast("Request accepted in the demo. You can change your mind.");
     });
@@ -307,7 +311,11 @@ function App() {
           onClick={() => go("/requests/" + r.id)}
           aria-label={`View ${money(r.reward)} ${r.category} request`}
         >
-          <ProductArt tone={p.tone} />
+          <div className={`request-product-preview ${p.tone}`}>
+            <LockKeyhole size={23} />
+            <strong>{p.name}</strong>
+            <small>ADULT CATALOGUE TOY · PRIVATE SUBMISSION</small>
+          </div>
           <Badge className={`status ${r.status.toLowerCase()}`}>
             <span />
             {r.status}
@@ -396,7 +404,13 @@ function App() {
   let content: ReactNode;
   if (["/", "/search", "/following", "/saved", "/history"].includes(route))
     content = (
-      <VideoFeed route={route} query={videoSearch} go={go} library={library} />
+      <VideoFeed
+        route={route}
+        query={videoSearch}
+        go={go}
+        library={library}
+        requests={state.requests}
+      />
     );
   else if (route.startsWith("/watch/"))
     content = (
@@ -406,6 +420,7 @@ function App() {
         library={library}
         onRequest={chooseTemplate}
         notify={setToast}
+        requests={state.requests}
       />
     );
   else if (route === "/browse")
@@ -414,7 +429,7 @@ function App() {
         <PageHead
           kicker="THE REQUEST BOARD"
           title="The request board"
-          copy="Predefined video briefs, clear demo rewards, and the right to decline."
+          copy="Adult catalogue requests. Self-recorded private submissions. Demo rewards after review."
         />
         <RequestTemplates onChoose={chooseTemplate} />
         <div className="browse-tools">
@@ -491,8 +506,8 @@ function App() {
       <>
         <PageHead
           kicker="MAKE A REQUEST"
-          title="Request a video"
-          copy="Choose a fixed brief, set a demo reward, and let a creator decide."
+          title="Make a private adult request"
+          copy="Choose an approved catalogue toy, set a demo reward, and let a consenting adult decide. Online only."
         />
         <div className="builder-layout">
           <form className="panel builder" onSubmit={createRequest}>
@@ -506,10 +521,11 @@ function App() {
             </div>
             {step === 1 ? (
               <>
-                <h2>Choose a predefined video request.</h2>
+                <h2>Choose an approved catalogue item.</h2>
                 <p className="muted">
-                  Choose one of the non-explicit video briefs below. Catalogue
-                  items are fictional and custom objects are not permitted.
+                  Requests are limited to these fictional adult toys. The
+                  accepting adult records their own private submission. Custom
+                  objects are not permitted.
                 </p>
                 <TemplateChoices
                   selected={templateId}
@@ -561,8 +577,9 @@ function App() {
                   </p>
                 )}
                 <div className="inline-note">
-                  <HeartHandshake size={16} /> No explicit instructions. No
-                  custom objects. No pressure to continue.
+                  <HeartHandshake size={16} /> Fixed catalogue only. Adults
+                  record themselves. No in-person booking or pressure to
+                  continue.
                 </div>
               </>
             ) : step === 3 ? (
@@ -621,7 +638,7 @@ function App() {
                 <h2>One last boundary check.</h2>
                 <div className="review-summary">
                   <div>
-                    <span>Video request</span>
+                    <span>Private adult request</span>
                     <b>
                       {requestTemplates.find((t) => t.id === templateId)?.title}
                     </b>
@@ -745,6 +762,7 @@ function App() {
         go={go}
         library={library}
         onRequest={startCreate}
+        requests={state.requests}
       />
     );
   else if (route === "/wallet")
@@ -972,6 +990,11 @@ function App() {
                   p.line + " request"}
               </h2>
               <p>{r.notes}</p>
+              <div className="inline-note">
+                <Camera size={17} /> The accepting adult records themselves.
+                Private review only; no permission to repost or arrange an
+                in-person meeting.
+              </div>
               <div className="detail-specs">
                 <div>
                   <span>Approved product</span>
@@ -1027,8 +1050,21 @@ function App() {
             </div>
             {r.status === "OPEN" && r.creatorId !== "you" ? (
               <>
+                <label className="check-field acceptance-consent">
+                  <input
+                    type="checkbox"
+                    checked={acceptanceConsent}
+                    onChange={(e) => setAcceptanceConsent(e.target.checked)}
+                  />
+                  <span>
+                    I’m simulating a consenting adult accepting this catalogue
+                    request, choosing their boundaries, and recording themselves
+                    for private review. They can stop or withdraw.
+                  </span>
+                </label>
                 <button
                   className="button primary wide"
+                  disabled={!acceptanceConsent}
                   onClick={() => accept(r)}
                 >
                   Accept demo request <ArrowUpRight size={16} />
@@ -1104,8 +1140,8 @@ function App() {
           Back to request
         </button>
         <PageHead
-          kicker="PRIVATE PROOF"
-          title="Ready for a review"
+          kicker="SELF-RECORDED PRIVATE SUBMISSION"
+          title="Your recording. Your consent"
           copy="Simulate a submission. This demo never accepts or stores real media."
         />
         {r.status === "ACCEPTED" && r.claimant === "you" ? (
@@ -1153,8 +1189,9 @@ function App() {
                   onChange={(e) => setSubmissionConsent(e.target.checked)}
                 />
                 <span>
-                  I understand this is a simulated submission and contains no
-                  real personal media.
+                  This demo represents a consenting adult recording themselves
+                  and allowing private review only. It grants no public sharing
+                  permission and contains no real personal media.
                 </span>
               </label>
               <button

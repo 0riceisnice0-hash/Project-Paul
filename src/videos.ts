@@ -1,140 +1,23 @@
-import { type Category } from "./data";
+import {
+  catalogue,
+  type Category,
+  type RequestItem,
+  type Status,
+} from "./data";
 
 export type DemoVideo = {
   id: string;
   title: string;
   creatorId: string;
   category: string;
-  thumbnail: string;
-  duration: string;
-  views: string;
   published: string;
-  caption?: string;
   description: string;
+  productId: string;
+  requestId: string;
+  reward: number;
+  status: Status;
 };
-export const videoCategories = [
-  "All",
-  "Creator updates",
-  "Behind the scenes",
-  "Q&A",
-  "Catalogue",
-  "Community",
-];
-export const videos: DemoVideo[] = [
-  {
-    id: "v-1",
-    title: "A look around the studio. Nothing fancy, just us.",
-    creatorId: "milo",
-    category: "Behind the scenes",
-    thumbnail: "studio",
-    duration: "8:42",
-    views: "12.4K",
-    published: "2 days ago",
-    caption: "STUDIO TOUR",
-    description:
-      "A fictional creator update for this interface demo. The sample player uses a short, non-explicit flower clip to demonstrate playback.",
-  },
-  {
-    id: "v-2",
-    title: "Before you request anything: let’s talk boundaries",
-    creatorId: "rae",
-    category: "Q&A",
-    thumbnail: "workspace",
-    duration: "6:18",
-    views: "8.1K",
-    published: "1 day ago",
-    caption: "LET’S TALK.",
-    description:
-      "Clear briefs, ongoing consent, and the right to decline. A non-explicit demo of an educational creator video.",
-  },
-  {
-    id: "v-3",
-    title: "The little camera setup behind the videos",
-    creatorId: "jules",
-    category: "Behind the scenes",
-    thumbnail: "camera",
-    duration: "11:05",
-    views: "6.7K",
-    published: "3 days ago",
-    description:
-      "A fictional behind-the-scenes video about making content. All channel statistics and comments are simulated.",
-  },
-  {
-    id: "v-4",
-    title: "Your questions. My completely unfiltered answers.",
-    creatorId: "milo",
-    category: "Q&A",
-    thumbnail: "desk",
-    duration: "14:32",
-    views: "19.2K",
-    published: "4 days ago",
-    caption: "THE FAQ",
-    description:
-      "A fictional, non-explicit community Q&A. This page demonstrates a watch experience and predefined request options.",
-  },
-  {
-    id: "v-5",
-    title: "A quiet morning between filming days",
-    creatorId: "rae",
-    category: "Creator updates",
-    thumbnail: "workspace",
-    duration: "4:56",
-    views: "4.3K",
-    published: "5 days ago",
-    description:
-      "A fictional everyday creator update. Stock preview imagery and a short sample clip are used in the demo.",
-  },
-  {
-    id: "v-6",
-    title: "After hours: a check-in with the community",
-    creatorId: "jules",
-    category: "Community",
-    thumbnail: "night",
-    duration: "7:24",
-    views: "10.8K",
-    published: "1 week ago",
-    caption: "AFTER HOURS",
-    description:
-      "An ordinary community check-in, presented as a fictional channel upload.",
-  },
-  {
-    id: "v-7",
-    title: "Why we keep requests inside a fixed catalogue",
-    creatorId: "rae",
-    category: "Catalogue",
-    thumbnail: "plants",
-    duration: "5:09",
-    views: "7.2K",
-    published: "1 week ago",
-    caption: "WITHIN REASON.",
-    description:
-      "A non-explicit explanation of catalogue-only requests. Demonstration labels do not certify any real product.",
-  },
-  {
-    id: "v-8",
-    title: "What happens after you post a request?",
-    creatorId: "milo",
-    category: "Catalogue",
-    thumbnail: "studio",
-    duration: "3:48",
-    views: "15.6K",
-    published: "1 week ago",
-    description:
-      "A fictional walkthrough of request acceptance, private submission placeholders, review, and demo payouts.",
-  },
-  {
-    id: "v-9",
-    title: "The setup tour you kept asking for",
-    creatorId: "jules",
-    category: "Behind the scenes",
-    thumbnail: "desk",
-    duration: "9:16",
-    views: "5.9K",
-    published: "2 weeks ago",
-    description:
-      "A fictional channel video about a recording workspace. No actual creator upload is shown.",
-  },
-];
+export const videoCategories = ["All", "Soft One", "Studio Two", "Full Circle"];
 export type RequestTemplate = {
   id: string;
   title: string;
@@ -147,32 +30,61 @@ export type RequestTemplate = {
 export const requestTemplates: RequestTemplate[] = [
   {
     id: "overview",
-    title: "Catalogue overview video",
+    title: "Soft One private request",
     productId: "soft-one",
     category: "Starter",
     reward: 35,
     brief:
-      "A non-explicit overview of the fictional approved catalogue item, its packaging, and published information. No demonstration of sexual activity.",
+      "An adult catalogue request for Soft One. The accepting adult sets the boundaries, records their own submission, and permits private review only. No public sharing or in-person contact. Demo item and submission only.",
     icon: "review",
   },
   {
     id: "qa",
-    title: "Creator Q&A video",
+    title: "Studio Two private request",
     productId: "studio-two",
     category: "Standard",
     reward: 60,
     brief:
-      "A non-explicit creator Q&A about catalogue choices, boundaries, and the request process. Questions stay within these topics.",
+      "An adult catalogue request for Studio Two. The accepting adult sets the boundaries, records their own submission, and permits private review only. Consent can be withdrawn; the reward never overrides that choice. Demo item and submission only.",
     icon: "question",
   },
   {
     id: "studio",
-    title: "Behind-the-scenes video",
+    title: "Full Circle private request",
     productId: "full-circle",
     category: "Premium",
     reward: 100,
     brief:
-      "An ordinary behind-the-scenes video about the creator’s filming setup and process. No explicit media or activity.",
+      "An adult catalogue request for Full Circle. The accepting adult sets the boundaries and records their own private submission. Only the fixed catalogue item is permitted. No third-party filming, public sharing, or in-person contact. Demo item and submission only.",
     icon: "tour",
   },
 ];
+// Keep existing saved/history links while changing the presentation.
+const existingIds: Record<string, string> = {
+  "rq-1035": "v-1",
+  "rq-1060": "v-2",
+  "rq-1100": "v-3",
+  "rq-1075": "v-4",
+  "rq-1045": "v-5",
+  "rq-1120": "v-6",
+};
+export function getRequestVideos(requests: RequestItem[]): DemoVideo[] {
+  return requests.map((request) => {
+    const product = catalogue.find((p) => p.id === request.productId)!;
+    return {
+      id: existingIds[request.id] || "submission-" + request.id,
+      title: `${product.name} · £${request.reward} private request`,
+      creatorId: request.creatorId,
+      category: product.name,
+      published: new Date(request.createdAt).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+      }),
+      description: request.notes,
+      productId: request.productId,
+      requestId: request.id,
+      reward: request.reward,
+      status: request.status,
+    };
+  });
+}

@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -19,6 +13,7 @@ import {
   Heart,
   Home,
   ListVideo,
+  LockKeyhole,
   Menu,
   MessageCircle,
   MoreHorizontal,
@@ -32,11 +27,11 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { catalogue, creators, money } from "./data";
+import { catalogue, creators, money, type RequestItem } from "./data";
 import {
   requestTemplates,
   videoCategories,
-  videos,
+  getRequestVideos,
   type DemoVideo,
 } from "./videos";
 
@@ -158,7 +153,8 @@ export function PlatformShell({
               <Play size={17} fill="currentColor" />
             </span>
             <b>
-              anything<span>.</span>
+              <span className="domain-first">illstickanything</span>
+              <span className="domain-last">upmyass.com</span>
             </b>
             <small>18+</small>
           </button>
@@ -286,14 +282,16 @@ export function PlatformShell({
           >
             Source on GitHub
           </a>
-          <span className="copyright">© 2026 anything.</span>
+          <span className="copyright">© 2026 illstickanythingupmyass.com</span>
         </div>
       </aside>
       <main className="platform-main">
         <div className="platform-demo-note">
           <span className="demo-live-dot" />
           Demo mode
-          <span>Sample videos · Fictional profiles · No real payments</span>
+          <span>
+            Adult catalogue requests · Private submissions · Demo credits
+          </span>
           <button onClick={() => go("/rules")}>
             18+ & guidelines <ChevronRight size={12} />
           </button>
@@ -317,16 +315,27 @@ export function VideoCard({
   return (
     <article className={`video-card ${compact ? "related-video" : ""}`}>
       <button
-        className={`video-thumbnail thumb-${video.thumbnail}`}
+        className={`video-thumbnail catalogue-thumbnail ${catalogue.find((p) => p.id === video.productId)?.tone}`}
         onClick={() => go("/watch/" + video.id)}
         aria-label={`Watch ${video.title}`}
       >
-        <img src={`/thumbnails/${video.thumbnail}.jpg`} alt="" loading="lazy" />
-        {video.caption && (
-          <span className="thumbnail-caption">{video.caption}</span>
-        )}
-        <span className="thumbnail-sample">DEMO PREVIEW</span>
-        <span className="video-duration">{video.duration}</span>
+        <span className="catalogue-thumb-code">
+          {catalogue.find((p) => p.id === video.productId)?.code} · 18+
+        </span>
+        <span className="catalogue-thumb-lock">
+          <LockKeyhole size={23} />
+        </span>
+        <span className="catalogue-thumb-name">{video.category}</span>
+        <span className="catalogue-thumb-reward">
+          {money(video.reward)}
+          <small>DEMO REWARD</small>
+        </span>
+        <span className="thumbnail-sample">PRIVATE VIDEO · DEMO</span>
+        <span
+          className={`video-duration submission-status ${video.status.toLowerCase()}`}
+        >
+          {video.status}
+        </span>
         <span className="thumbnail-hover">
           <Play size={25} fill="currentColor" />
         </span>
@@ -356,7 +365,7 @@ export function VideoCard({
             <BadgeCheck size={12} />
           </button>
           <p>
-            {video.views} demo views <span>·</span> {video.published}
+            Requester & reviewers only <span>·</span> {video.published}
           </p>
         </div>
       </div>
@@ -369,21 +378,24 @@ export function VideoFeed({
   query,
   go,
   library,
+  requests,
 }: {
   route: string;
   query: string;
   go: Navigation;
   library: Library;
+  requests: RequestItem[];
 }) {
   const [category, setCategory] = useState("All");
-  let list = videos;
+  const requestVideos = getRequestVideos(requests);
+  let list = requestVideos;
   if (route === "/following")
     list = list.filter((v) => library.data.following.includes(v.creatorId));
   if (route === "/saved")
     list = list.filter((v) => library.data.saved.includes(v.id));
   if (route === "/history")
     list = library.data.history
-      .map((id) => videos.find((v) => v.id === id)!)
+      .map((id) => requestVideos.find((v) => v.id === id)!)
       .filter(Boolean);
   if (route === "/search" && query.trim())
     list = list.filter((v) =>
@@ -406,6 +418,23 @@ export function VideoFeed({
             : "";
   return (
     <section className="video-feed">
+      {route === "/" && (
+        <div className="adult-feed-heading">
+          <div>
+            <h1>illstickanythingupmyass.com</h1>
+            <p>
+              Within reason. Consensual adult anal-play requests. Approved toys
+              only.
+            </p>
+          </div>
+          <button onClick={() => go("/browse")}>
+            <FileCheck2 size={17} /> Open requests <ChevronRight size={16} />
+          </button>
+          <span>
+            Online only · Adults record themselves · Submissions stay private
+          </span>
+        </div>
+      )}
       <div className="feed-chips">
         {videoCategories.map((x) => (
           <button
@@ -420,7 +449,7 @@ export function VideoFeed({
       {title && (
         <div className="video-page-title">
           <h1>{title}</h1>
-          <span>{list.length} demo videos</span>
+          <span>{list.length} demo submissions</span>
         </div>
       )}
       <div className="video-grid">
@@ -455,8 +484,8 @@ export function VideoFeed({
       )}
       <div className="feed-end">
         <ShieldCheck size={14} />
-        Non-explicit previews. Fictional channels. The joke still has
-        boundaries.
+        No public intimate media. Adult consent, a fixed catalogue, and private
+        review.
       </div>
     </section>
   );
@@ -509,7 +538,10 @@ export function RequestTemplates({
     <section className="predefined-section">
       <div>
         <h2>Start with a predefined request</h2>
-        <p>Pick a permitted video brief. Products and categories are fixed.</p>
+        <p>
+          Pick a catalogue toy. Agree boundaries. The accepting adult records
+          their own private submission.
+        </p>
       </div>
       <TemplateChoices onChoose={onChoose} />
     </section>
@@ -522,22 +554,22 @@ export function WatchPage({
   library,
   onRequest,
   notify,
+  requests,
 }: {
   id: string;
   go: Navigation;
   library: Library;
   onRequest: (id: string) => void;
   notify: (message: string) => void;
+  requests: RequestItem[];
 }) {
-  const video = videos.find((v) => v.id === id),
-    ref = useRef<HTMLVideoElement>(null);
+  const requestVideos = getRequestVideos(requests);
+  const video = requestVideos.find((v) => v.id === id);
   const [started, setStarted] = useState(false),
-    [error, setError] = useState(false),
     [comment, setComment] = useState(""),
     [reported, setReported] = useState(false);
   useEffect(() => {
     setStarted(false);
-    setError(false);
     setComment("");
     setReported(false);
   }, [id]);
@@ -549,16 +581,13 @@ export function WatchPage({
       </div>
     );
   const c = creators.find((c) => c.id === video.creatorId)!,
+    hasSubmission = ["SUBMITTED", "VERIFIED", "PAID"].includes(video.status),
     following = library.data.following.includes(c.id),
     saved = library.data.saved.includes(id),
     liked = library.data.liked.includes(id);
-  const play = async () => {
-    try {
-      await ref.current?.play();
-      setStarted(true);
-    } catch {
-      notify("Use the player controls to start the sample clip.");
-    }
+  const openSubmission = () => {
+    setStarted(true);
+    library.record(id);
   };
   const addComment = (e: FormEvent) => {
     e.preventDefault();
@@ -570,48 +599,60 @@ export function WatchPage({
   return (
     <div className="watch-layout">
       <section className="watch-column">
-        <div className="video-player">
-          <video
-            key={id}
-            ref={ref}
-            controls
-            playsInline
-            preload="metadata"
-            poster={`/thumbnails/${video.thumbnail}.jpg`}
-            onPlay={() => {
-              setStarted(true);
-              library.record(id);
-            }}
-            onError={() => setError(true)}
-            src="/media/sample.mp4"
-            aria-label="Non-explicit sample video player"
-          />
-          {!started && !error && (
-            <button className="player-play-overlay" onClick={play}>
-              <span>
-                <Play size={31} fill="currentColor" />
-              </span>
-              <b>Play sample</b>
-              <small>Non-explicit demo footage</small>
-            </button>
-          )}
-          {error && (
-            <div className="player-error">
-              <h3>Sample playback couldn’t load.</h3>
-              <button
-                onClick={() => {
-                  setError(false);
-                  ref.current?.load();
-                }}
-              >
-                Try again
+        <div className={`video-player private-submission-player ${c.tone}`}>
+          <span className="private-player-label">
+            <LockKeyhole size={14} /> PRIVATE SUBMISSION · DEMO
+          </span>
+          {started ? (
+            <div className="submission-record">
+              <ShieldCheck size={38} />
+              <h2>{video.category}</h2>
+              <p>
+                {hasSubmission
+                  ? "Self-recorded adult submission"
+                  : "Private request record · no submission yet"}
+              </p>
+              <div>
+                <span>Request</span>
+                <b>{video.requestId}</b>
+              </div>
+              <div>
+                <span>Reward</span>
+                <b>{money(video.reward)} demo GBP</b>
+              </div>
+              <div>
+                <span>Status</span>
+                <b>{video.status}</b>
+              </div>
+              <small>
+                Interface placeholder only. No recording exists or is shown.
+              </small>
+              <button onClick={() => go("/requests/" + video.requestId)}>
+                View request & consent terms <ChevronRight size={15} />
               </button>
+            </div>
+          ) : (
+            <div className="private-player-intro">
+              <LockKeyhole size={42} />
+              <h2>{video.category}</h2>
+              <p>
+                {hasSubmission
+                  ? "Private recording. Controlled access."
+                  : "Awaiting a private adult submission."}
+              </p>
+              <button onClick={openSubmission}>
+                <Play size={17} />{" "}
+                {hasSubmission ? "Open demo submission" : "Open request record"}
+              </button>
+              <small>
+                This opens a record placeholder, not intimate footage.
+              </small>
             </div>
           )}
         </div>
         <div className="sample-caption">
-          Sample playback: short CC0 flower clip from MDN. Preview title,
-          duration, and channel are fictional.
+          Private by design: self-recorded by the accepting adult, shared only
+          for agreed review. All records here are fictional.
         </div>
         <h1 className="watch-title">{video.title}</h1>
         <div className="watch-actions">
@@ -664,20 +705,23 @@ export function WatchPage({
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(location.href);
-                  notify("Watch-page link copied.");
+                  notify(
+                    "Listing link copied. Private media is never included.",
+                  );
                 } catch {
                   notify("Copy the link from your address bar.");
                 }
               }}
             >
               <Share2 size={16} />
-              Share
+              Share listing
             </button>
           </div>
         </div>
         <div className="watch-description">
           <b>
-            {video.views} demo views · {video.published}
+            {money(video.reward)} demo reward · {video.status} ·{" "}
+            {video.published}
           </b>
           <p>{video.description}</p>
           <button onClick={() => go("/rules")}>
@@ -685,7 +729,9 @@ export function WatchPage({
           </button>
         </div>
         <div className="comments-section">
-          <h2>{(library.data.comments[id]?.length || 0) + 2} demo comments</h2>
+          <h2>
+            {(library.data.comments[id]?.length || 0) + 2} demo discussion notes
+          </h2>
           <form onSubmit={addComment}>
             <span className="channel-avatar lime">Y</span>
             <input
@@ -700,7 +746,7 @@ export function WatchPage({
           {[
             ...(library.data.comments[id] || []),
             "The clear boundaries are appreciated.",
-            "Would love a longer setup tour next time.",
+            "Private review only. No permission to repost the recording.",
           ].map((text, index) => (
             <div className="comment-row" key={index}>
               <span
@@ -736,18 +782,18 @@ export function WatchPage({
         <div className="watch-request-panel">
           <span className="request-panel-label">
             <FileCheck2 size={15} />
-            REQUEST A VIDEO
+            REQUEST AN APPROVED TOY
           </span>
           <h2>Got a request?</h2>
           <p>
-            Choose a predefined, permitted brief. No custom objects or explicit
-            activity.
+            Adults only. Choose a fixed catalogue item. The accepting adult
+            decides their boundaries and records themselves.
           </p>
           <TemplateChoices onChoose={onRequest} />
           <small>Rewards are demo credits. Creators can decline or stop.</small>
         </div>
         <h3 className="up-next">More from the community</h3>
-        {videos
+        {requestVideos
           .filter((v) => v.id !== id)
           .slice(0, 5)
           .map((v) => (
@@ -763,15 +809,17 @@ export function ChannelPage({
   go,
   library,
   onRequest,
+  requests,
 }: {
   id: string;
   go: Navigation;
   library: Library;
   onRequest: () => void;
+  requests: RequestItem[];
 }) {
   const [tab, setTab] = useState("Videos"),
     c = creators.find((c) => c.id === id) || creators[3],
-    list = videos.filter((v) => v.creatorId === c.id),
+    list = getRequestVideos(requests).filter((v) => v.creatorId === c.id),
     following = library.data.following.includes(c.id);
   useEffect(() => setTab("Videos"), [id]);
   return (
@@ -858,8 +906,9 @@ export function ChannelPage({
           <h2>About {c.name}</h2>
           <p>{c.bio}</p>
           <p>
-            Everything on this channel is fictional. Preview imagery is stock
-            photography; the player uses a non-explicit sample clip.
+            Adult catalogue requests and private submission records are
+            fictional. The demo shows no personal recordings and grants no
+            permission to repost creator media.
           </p>
           <button className="text-button" onClick={() => go("/rules")}>
             Read the community guidelines

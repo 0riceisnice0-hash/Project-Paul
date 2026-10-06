@@ -1,8 +1,8 @@
 # Demo media
 
-All thumbnails are ordinary, non-explicit stock scenes. Channel identities, titles, durations, views, and comments are fictional and do not describe the photographers or people in stock photos.
+The current public thumbnails and creator banners are non-graphic CSS catalogue cards. Private watch pages display metadata placeholders, with no intimate media. Creator identities, catalogue products, ratings and records are fictional.
 
-Unsplash images, used under the [Unsplash licence](https://unsplash.com/license):
+The previous generic video-feed version used these Unsplash images under the [Unsplash licence](https://unsplash.com/license). They are retained in Git history and are no longer included in the deployed app:
 
 - studio.jpg: https://images.unsplash.com/photo-1598488035139-bdbb2231ce04
 - desk.jpg: https://images.unsplash.com/photo-1497366216548-37526070297c
@@ -11,7 +11,7 @@ Unsplash images, used under the [Unsplash licence](https://unsplash.com/license)
 - workspace.jpg: https://images.unsplash.com/photo-1497215728101-856f4ea42174
 - night.jpg: https://images.unsplash.com/photo-1519608487953-e999c86e7455
 
-The short, non-explicit flower playback sample is from MDN's CC0 example media:
+The previous flower playback sample was from MDN's CC0 example media and has also been removed:
 https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
 
-Every watch page identifies this as sample playback, rather than the fictional creator's video. The feed duration is a fictional interface label; the player reports the actual sample duration.
+No stock scenes or sample flower clip stand in for the private submission flow in the current app.
