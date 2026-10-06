@@ -1,0 +1,5 @@
+name = "project-paul"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+# The current release is a static demo. No database, uploads, or money bindings.
